@@ -55,15 +55,15 @@ The following diagram gives an idea of the core mechanism:
 
 ![fig3](./DOC/images/03.jpg)
 
-### Modelising the CSS rule and stylesheet
+### Modelling the CSS rule and stylesheet
 
-First let's start by modelising a CSS rule: <code>CssRule</code> is a class listing of properties with their values, just like "real-life" CSS. The class lets us add a property with its value or remove it. It is a list of properties with their values, just like in "real-life" CSS.
+First let's start by modelling a CSS rule: <code>CssRule</code> is a class listing of properties with their values, just like "real-life" CSS. 
 The class lets us add a property with its value or remove it.
 The class also manages CSS pseudo classes and their priority (LoVeHAte).
-This is the class the Painters will operate on (they will change/add properties and values)
-One the painters have been applied, the rule can be printed (for output in a css file).
+This is the class the *Painters* will operate on (they will change/add properties and values)
+Once the painters have been applied, the rule can be printed (for output in a css file).
 
-(notice: in this article code snippets have been stripped of material not directly relevant to the  subject. You can download the full classes at the end of the article) 
+(notice: in this document code snippets have been stripped of material not directly relevant to the  subject. See files for full code) 
 
 ```java
 /**
@@ -300,5 +300,229 @@ public class CssRule
 ```
 
 ## Painters
+
+### Painter interface
+
+Following our approach we'll start by defining a Painter interface:
+
+```java
+public interface IPainter extends Cloneable
+{
+	/**
+	 * Apply this painter on a page element (i.e. on its css rule)
+	 *
+	 */
+	public CssRule apply(CssRule rule);
+
+	/**
+	 * Update this painter to take in modifications due to the passed painter.
+	 * Used when painters are stacked in a {@link PainterStack}: a painter added on
+	 * top of the stack can update all the painters beneath it, i.e. have a side effect
+	 * e.g. applying color.
+	 *
+	 * @param  p
+	 * @return indicate whether the updater painter can be removed from the painterStack
+	 *         once the update is done. This can be useful for cases where the updating
+	 *         painter is just a complement to a specific painter in the stack, and once
+	 *         this painter has been updated there is no more justification for the top
+	 *         stack painter anymore.
+	 *         Note for extending classes: unless you know exactly what you're doing,
+	 *         you should return <tt>false</tt>
+	 */
+	public boolean update(IPainter p);
+
+	public PainterStack add(IPainter p);
+
+	public IPainter clone();
+}
+```
+
+
+A Painter, through its apply()  function, takes a css rule in entry, blank or not, and yields a new css rule reflecting the changes brought by the painter.
+
+![fig3b](./DOC/images/03.jpg)
+
+For example, consider the following css rule:
+```css
+.div > a.special 
+{	color : #EE88EE;
+}
+```
+going through a Painter that "paints" a black border.
+The resulting css rule would be:
+```css
+.div > a.special 
+{	color : #EE88EE;
+	border : 2px solid black;
+}
+```
+
+### Parent Painter class
+
+Implementing the interface, here is the (abstract) painter parent to all concrete painters we're going to create later on:
+```java
+public abstract class Painter implements IPainter
+{
+	public CssRule apply(CssRule rule)
+	{
+		return apply(rule, null);
+	}
+
+
+	@Override
+	public Painter clone()
+	{	/*        */	try
+		/*        */	{
+
+		return (Painter) super.clone();
+
+		/*        */	}
+		/*        */	catch (CloneNotSupportedException e1)
+		/*        */	{	throw new RuntimeException("This should not happen. Check code.", e1);
+		/*        */	}
+	}
+
+
+	public PainterStack add(IPainter p)
+	{	return new PainterStack().add(this).add(p);
+	}
+
+	
+	@Override
+	public String toString()
+	{
+		return "Painter = [" + this.getClass().getSimpleName() + "]";
+	}
+	
+}
+```
+
+### Examples of painters
+
+#### A straightforward painter: the Border Painter
+```java
+public class PainterBorder extends Painter
+{
+	private String             style             = null;
+	private String             width             = null;
+	private ETypeColorSet      colorSet          = null;
+	private ETypeColorShade    shade             = null;
+	private String             color             = null;
+
+	private Palette            palette           = null;
+
+	/**
+	 * Builder pattern, adapted. Offers an alternate way of building a PainterBorder.   <br />
+	 * @see PainterBackground.Builder
+	 */
+	public static class Builder
+	{	PainterBorder pb;
+
+		/**
+		 * Build a new PainterBorder 'from scratch'.
+		 * @see Builder
+		 */
+		public Builder()
+		{	pb = new PainterBorder();
+		}
+
+		/**
+		 * Build a new PainterBorder on the basis of the passed PainterBorder.
+		 * @see Builder
+		 */
+		public Builder(PainterBorder p)
+		{	pb = (PainterBorder) p.clone();
+		}
+
+		/**
+		 * Set css 'style' property. Ex: "solid", "dotted"
+		 */
+		public Builder style            (String            style             )    {pb.style             = style                                      ; return this; }
+
+		/**
+		 * Set css 'width' property. Ex: "0px"   "1px 2px 0px 3px"
+		 */
+		public Builder width            (String            width             )    {pb.width             = width                                      ; return this; }
+
+		/**
+		 * Applies an empty border (i.e. no border).
+		 * Same as <tt>width("0px")</tt>
+		 */
+		public Builder none            ()                                         {pb.width             = "0px"                                      ; return this; }
+
+		/**
+		 * Border color, specified directly (ex: "#FFFFFF").
+		 * The other way to specify the color is to specify or both <tt>colorSet</tt> and <tt>shade</tt>.
+		 */
+		public Builder color            (String            color             )    {pb.color             = color                                     ; return this; }
+
+		/**
+		 * ColorSet from which to pick border color.
+		 */
+		public Builder colorSet         (ETypeColorSet     colorSet          )    {pb.colorSet          = colorSet                                  ; return this; }
+
+		/**
+		 * Shade of the colorSet to pick as border color.
+		 */
+		public Builder shade            (ETypeColorShade   shade             )    {pb.shade             = shade                                     ; return this; }
+
+		/**
+		 * Finalize building and return the built PainterBorder.
+		 */
+		public PainterBorder build()
+		{	return pb;
+		}
+	}
+
+
+	/**
+	 * @used_by {@link PainterBorder.Builder}
+	 */
+	protected PainterBorder() {}
+
+
+	public boolean update(IPainter updater)
+	{	...
+	}
+
+
+	public CssRule apply(CssRule element, String pseudoClass)
+	{
+		if (colorSet != null && shade != null && palette != null)
+		{	color = palette.getColorSet(colorSet).getShade(shade).printHex();
+		}
+
+		element.set(pseudoClass, "border-width", width);
+		element.set(pseudoClass, "border-style", style);
+		element.set(pseudoClass, "border-color", color);
+		return element;
+	}
+
+...
+}
+```
+A few interesting things to notice:
+
+•	We're implementing a modified version of the Builder pattern (see Bloch, Effective Java, item XX). This pattern is especially useful when dealing with an object with many default and settable properties. 
+o	This allows us to create a BorderPainter in a chained fashion, as follows:
+```java
+new PainterBorder.Builder().width("1px 1px 1px 1px").style("solid").build();
+```
+o	Painters are immutable. This greatly contributes to reducing mistakes and bugs of all sorts when using painters.
+
+•	You might notice the presence of a few classes when it comes to colour properties and values: ETypeColorSet      , ETypeColorShade. These enum classes are used to describe the colour shades of a Colour Palette object we'll be using to globally manage the colours in our generated CSS rules. 
+
+We'll explore the concept in depth later on. For the moment, all we need to know is that a Colour Palette lets us abstract the actual colour from the rule we're painting. Instead of writing "#E8AA32", we'll specify "shade 3 (of 5) of the secondary (or primary, or ternary etc.) colour". Once we've finished building our rule, if we need to print it out we'll apply a last Painter, PainterColor , that will replace all the references to the colour palette by the actual colour codes.
+
+In short, the colour palette mechanism allows us to:
+•	easily change the colours of our CSS rules 
+•	work within a set of coherent tones. This is paramount in our quest of producing stylesheets with the underlying idea of themes. Themes have colour schemes.
+
+•	You might find the border painter to be quite "collinear" with the CSS border properties, in the sense that it does not decouple the build functions that it offers from the underlying CSS properties much. However, other painters may display more "orthogonality", offering build functions with a higher cognitive level, cross-cutting several CSS properties. Next section offers examples. 
+
+
+
+
+
 
 WIP, soon to come!
