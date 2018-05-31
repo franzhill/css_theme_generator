@@ -5,11 +5,11 @@
 ### Abstract
 
 CSS is too low level when you want to think the look and feel of your website in terms of "theme".
-A theme would be a coherent set of CSS settings that "go well together". For example, mixing all sorts of fonts and non-complementary colours does not go well together and there's nothing that prevents us doing this in CSS. 
+A **theme** would be a coherent set of CSS settings that "go well together". For example, mixing all sorts of fonts or using non-complementary colours are examples of things that don't "go well together". Problem is, there's nothing to prevent you doing that in CSS. 
 
 The aim of this project is to show how it is possible to build upon CSS and offer a higher level, more coherent approach to theming a webpage.
 
-By defining the concept of "Painters", then stacking them up and combining them to form a the idea of "themes", 
+By defining the concept of "*Painters*", then stacking them up and combining them to form a the idea of "*themes*", 
 we are presented with a powerful tool that achieves just that, and relegates CSS to generated machine code.
 
 The code presented here is written in Java, but it could have been written in any other (Turing complete ;o)) language.
@@ -33,15 +33,15 @@ In this article, we'll describe such a mechanism. The language chosen is Java, a
 
 ### Approach
 
-What we're trying to achieve: 
+What we're trying to achieve follows: 
 -generate css stylesheet on the fly
 -stylesheet reflects a chosen "theme"
 -easily develop new themes based on existing
 
 
-The concept of themes is not something that would let us think we're exploring unchartered territory. Themes are for example quite widespread in desktop software (they're usually called skins). However desktop application programming and web development are quite different.
+The concept of themes is not something that would let us think we're exploring uncharted territory. Themes are for example quite widespread in desktop software (they're usually called skins). However desktop application programming and web development are quite different.
 
-So it seems we'll have to build our solution from the bottom up. Or rather, use another analogy. Analogies are quite powerful because they leverage solutions that have already been thought trough and tested in other domains - provided that transposing is possible.
+So it seems we'll have to build our solution from the bottom up. Or rather, use another analogy. The power in analogies lies in the leverage they bring from solutions that have already been thought trough and tested in other domains - provided that transposing is possible.
 
 In our case we'll get our inspiration from image editing tools. Image editing tools illustrate the concept of working "by layers". Here we mean not the specific editing software lingo, but layers in the broad sense, i.e. changes that are applied successively to a picture and pile up (or down when you hit "undo"). You start with a blank canvas, then apply a background. Then apply a border. Then some content etc. Then choose a colour tone, that might affect the background colour, the border colour and possibly other layers already laid.
 
