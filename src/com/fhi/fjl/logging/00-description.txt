@@ -1,0 +1,7 @@
+Meant to be used INSTEAD (or AS) the 'main' logging solution.
+Provides an interface with all the usual logging functions, and a suggestion of several implementations. 
+
+
+Meant to be used alongside (and not instead of) the 'main' logging solution (apache.commons.logging or other)
+Provides extra, comfort-functionalities, accessible in an independant fashion.
+
