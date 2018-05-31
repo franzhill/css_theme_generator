@@ -1,5 +1,6 @@
 # css_theme_generator
-Generating themed css stylesheets with Java
+
+## Generating themed css stylesheets with Java
 
 CSS is too low level when you want to think the look and feel of your website in terms of "theme".
 A theme would be a coherent set of CSS settings that "go well together". For example, mixing all sorts of fonts and non-complementary colours does not go well together and there's nothing that prevents us doing this in CSS. 
