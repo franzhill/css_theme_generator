@@ -1,3 +1,11 @@
+
+> **💡 Notice**  
+> This is an unfinished project I toyed with around 2018. <br />
+> I am leaving it here for 'instructional' purposes  ;o) <br />
+
+<br />
+<br />
+
 # css_theme_generator
 
 ## Generating themed css stylesheets with Java
